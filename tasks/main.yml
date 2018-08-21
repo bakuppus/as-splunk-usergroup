@@ -1,20 +1,25 @@
 ---
 - include_vars: splunkppassword.yml
+- name: Create splunk unix group
+  become: yes
+  group:
+    name: "{{ splunk_group }}"
+    state: present
 
-- name: Create Splunk unix group
-  group: name=splunkp
-         state=present
+- name: Create and add splunk user to the group
+  become: yes
+  user:
+    name: "{{ splunk_user }}"
+    comment: "Splunk service user"
+    shell: /bin/bash
+    groups: "{{ splunk_group }}"
+    createhome: true
+    home: "{{ splunk_home }}"
+    password: "{{ splunk_password }}"
 
-- name: Create Splunk unix user
-  user: name=splunkp
-        group=splunkp
-        state=present
-        comment="Splunk User"
-        shell="/bin/bash"
-        home="/opt/splunk"
-        password="{{ splunkp_password }}"
-
-- name: Add authorized key to user splunkp
-  authorized_key: user=splunkp
-                  key="{{ shared_ssh_public_key }}"
-                  state=present
+- name: Add authorized key to the user - "{{ splunk_user }}"
+  become: yes
+  authorized_key:
+    user: "{{ splunk_user }}"
+    key: "{{ shared_ssh_public_key }}"
+    state: present
